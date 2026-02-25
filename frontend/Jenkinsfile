@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+
+    environment {
+        FRONTEND_DIR = "frontend"
+    }
+
+    stages {
+
+        stage('Clone Frontend Repository') {
+            steps {
+                git branch: 'main',
+                url: 'https://github.com/riyakatiyar5821-cmyk/cicdtutedude.git'
+            }
+        }
+
+        stage('Install Frontend Dependencies') {
+            steps {
+                dir("${FRONTEND_DIR}") {
+                    sh '''
+                    npm install
+                    '''
+                }
+            }
+        }
+
+        stage('Restart Express Frontend') {
+            steps {
+                dir("${FRONTEND_DIR}") {
+                    sh '''
+                    pm2 restart express-frontend || \
+                    pm2 start index.js --name express-frontend
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Express Frontend Deployment Successful"
+        }
+        failure {
+            echo "❌ Express Frontend Deployment Failed"
+        }
+    }
+}
