@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        BACKEND_DIR = "backend"
+    }
+
+    stages {
+
+        stage('Clone Backend Repository') {
+            steps {
+                git branch: 'main',
+                url: 'https://github.com/riyakatiyar5821-cmyk/cicdtutedude.git'
+            }
+        }
+
+        stage('Install Backend Dependencies') {
+            steps {
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                    python3 -m pip install --upgrade pip
+                    pip3 install -r requirements.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Restart Flask Backend') {
+            steps {
+                dir("${BACKEND_DIR}") {
+                    sh '''
+                    pm2 restart flask-backend || \
+                    pm2 start app.py --name flask-backend --interpreter python3
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Flask Backend Deployment Successful"
+        }
+        failure {
+            echo "❌ Flask Backend Deployment Failed"
+        }
+    }
+}
