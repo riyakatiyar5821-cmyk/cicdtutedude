@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+
+    environment {
+        FLASK_APP_DIR = "flask"
+        EXPRESS_APP_DIR = "express"
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/riyakatiyar5821-cmyk/cicdtutedude.git'
+            }
+        }
+
+        stage('Install Flask Dependencies') {
+            steps {
+                dir("${FLASK_APP_DIR}") {
+                    sh 'pip3 install -r requirements.txt'
+                }
+            }
+        }
+
+        stage('Install Express Dependencies') {
+            steps {
+                dir("${EXPRESS_APP_DIR}") {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Restart Flask App') {
+            steps {
+                dir("${FLASK_APP_DIR}") {
+                    sh '''
+                    pm2 restart flask-app || \
+                    pm2 start app.py --name flask-app --interpreter python3
+                    '''
+                }
+            }
+        }
+
+        stage('Restart Express App') {
+            steps {
+                dir("${EXPRESS_APP_DIR}") {
+                    sh '''
+                    pm2 restart express-app || \
+                    pm2 start index.js --name express-app
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment Successful 🚀"
+        }
+        failure {
+            echo "Deployment Failed ❌"
+        }
+    }
+}
